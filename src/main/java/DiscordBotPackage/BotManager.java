@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class BotManager extends ListenerAdapter{
     
-    JDA bot;
+    private JDA bot;
      
     public void run(String token){
          

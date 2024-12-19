@@ -1,76 +1,83 @@
 package DiscordBotPackage;
 
-import SongPackage.AudioPlayerProvider;
 import SongPackage.SongManager;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.managers.AudioManager;
 
-public class BotListeners extends ListenerAdapter{
+public class BotListeners extends ListenerAdapter {
 
     private SongManager sg;
-    
-    public BotListeners(){
+
+    public BotListeners() {
         this.sg = new SongManager();
     }
-    
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-    
-        this.msgFilter(event);
-        
-    
+
+        try {
+            this.msgFilter(event);
+        } catch (InterruptedException | ExecutionException ex) {
+            Logger.getLogger(BotListeners.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
-       
-    private void msgFilter(MessageReceivedEvent msg){
-        
+
+    private void msgFilter(MessageReceivedEvent msg) throws InterruptedException, ExecutionException {
+
         String msgText = msg.getMessage().getContentRaw();
-        
-        if(!msgText.contains("!")){
+
+        if (!msgText.contains("!")) {
             return;
         }
 
         String[] msgSplitted = msgText.toLowerCase().split(" ");
-        
-        if(msgSplitted[0].contains("ping")){
-            
+
+        if (msgSplitted[0].contains("ping")) {
+
             MessageChannel chln = msg.getChannel();
             chln.sendMessage("pong!").queue();
-            
+
         }
-        
-        if(msgSplitted[0].contains("play")){
-                 
+
+        if (msgSplitted[0].contains("play")) {
+
             //if length = 1, msg = !play
-            if(msgSplitted.length == 1){
+            if (msgSplitted.length == 1) {
+
                 this.sg.pauseAndPlay();
-            }else{
+
+            } else {
+
+                String songName="";
+                for(int i=1;i<msgSplitted.length;i++){
                 
-                System.out.println("Buscando "+msgSplitted[1]);
+                   songName = songName.concat(msgSplitted[i])+" ";
+                   
+                }
                 
-                String tmpPath = "C:\\Users\\cuent\\OneDrive\\Escritorio\\DS_JAVA_MS_bot\\DS_JAVA_MS_bot\\cache\\e1c49cad-9771-4880-afae-eeafa0cbc358.m4a";
-                this.sg.searchSong(tmpPath);
-                
-                Guild guild = msg.getGuild();
-                //change channel name
-                VoiceChannel chnnl = guild.getVoiceChannelsByName("general",true).get(0);                
-                AudioManager manager = guild.getAudioManager();
-                
-                manager.setSendingHandler(this.sg.createAudioHandler());
-                manager.openAudioConnection((AudioChannel) chnnl);
-                
+                System.out.println("Buscando " + songName);
+
+                this.sg.searchSong(songName, msg.getGuild());
                 
             }
-             
+
         }
         
-         
+        if(msgSplitted[0].contains("pause")){
+            this.sg.pause();
+        }
+        
+        
+        if(msgSplitted[0].contains("next")||msgSplitted[0].contains("n")){                
+            this.sg.nextTrack();
+            
+        }
+                  
     }
-    
-    
+
 }

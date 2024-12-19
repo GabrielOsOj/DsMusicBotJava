@@ -1,60 +1,48 @@
 package SongPackage;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+public class TrackScheduler extends AudioEventAdapter {
 
-public class TrackScheduler extends AudioEventAdapter{
-    
-    private final Queue<AudioTrack> songQueue;
-    private AudioPlayer player;
-    
-    public TrackScheduler(AudioPlayer player){
-        
-        this.songQueue = new ConcurrentLinkedQueue();
+    private final BlockingQueue<AudioTrack> songQueue;
+    private final AudioPlayer player;
+
+    public TrackScheduler(AudioPlayer player) {
+
         this.player = player;
-        
+        this.songQueue = new LinkedBlockingQueue<>();
+
     }
-    
-    public void queue(AudioTrack song){
-        
-        if(!this.player.startTrack(song, true)){        
-            this.songQueue.offer(song);
+
+    public void queue(AudioTrack song) {
+
+        if(!player.startTrack(song, true)) {
+            songQueue.offer(song);
         }
         
+
     }
-    
-    public boolean nextTrack(){
-    
-        return player.startTrack(this.songQueue.poll(), true);
-      
+
+    public void nextTrack() {
+
+        AudioTrack track = this.songQueue.poll();
+        
+        if(track!=null){
+            
+            this.player.startTrack(track.makeClone(), false);
+            
+        }
+
     }
-   
-    
+
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        
+        this.nextTrack();
     }
 
-    @Override
-    public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        
-    }
-
-    @Override
-    public void onPlayerResume(AudioPlayer player) {
-       
-    }
-
-    @Override
-    public void onPlayerPause(AudioPlayer player) {
-       
-    }
-    
 }

@@ -1,0 +1,11 @@
+buscar cancion -
+descargar cancion -
+reproducir cancion -
+pausar y poner play a la cancion -
+colocar varias canciones en cola -
+saltar cancion -
+borrar cache al terminar de reproducir la cancion
+solucionar exeptions para que no explote
+
+feedback en general, tanto cuando colocas una cancion o cuando skipeas, etc
+

@@ -1,31 +1,31 @@
 
 package SongPackage.SongFileManager.SearchPackage;
 
-import SongPackage.SongFileManager.SearchResultYt;
+import SongPackage.SongFileManager.DTOsearchResultYt;
 import java.util.LinkedList;
 import java.util.Queue;
 
 
 public class IdQueue {
 
-    private Queue<SearchResultYt> ytRespose;
-    private SearchResultYt lastId;
+    private Queue<DTOsearchResultYt> ytRespose;
+    private DTOsearchResultYt lastId;
 
        
     public void IdQueue(){
         
-        this.ytRespose = new LinkedList<SearchResultYt>();
+        this.ytRespose = new LinkedList<DTOsearchResultYt>();
         
     }
     
     
-    public SearchResultYt getNextElement(){
+    public DTOsearchResultYt getNextElement(){
               
      return this.ytRespose.poll();
      
     }
     
-    public void addSearchResult(SearchResultYt searchResult){
+    public void addSearchResult(DTOsearchResultYt searchResult){
         
         this.ytRespose.add(searchResult);
         

@@ -30,7 +30,7 @@ public class SchSearch {
 
     ;
         
-    public String searchSongId(String songName) {
+    protected String searchSongId(String songName) {
 
         String htmlPage = searchHTML(songName);
 

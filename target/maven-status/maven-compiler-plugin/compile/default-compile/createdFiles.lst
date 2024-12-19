@@ -1,10 +1,11 @@
 SongPackage\SongFileManager\DownloadPackage\DwnDownload.class
+SongPackage\SongFileManager\DTOsearchResultYt.class
 SongPackage\SongFileManager\SearchPackage\SchManager.class
+SongPackage\GuildPlayer.class
 DiscordJavaBotV2.class
 SongPackage\SongManager.class
 MusicManager\searchManager\SchSongQueue.class
 SongPackage\SongManager$1.class
-SongPackage\SongFileManager\SearchResultYt.class
 SongPackage\SongFileManager\SearchPackage\IdQueue.class
 SongPackage\SongFileManager\SongSADmanager.class
 SongPackage\SongFileManager\DownloadPackage\FileManager.class

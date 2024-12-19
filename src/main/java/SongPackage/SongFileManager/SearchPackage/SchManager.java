@@ -1,7 +1,7 @@
 package SongPackage.SongFileManager.SearchPackage;
 
 import MusicManager.searchManager.SchSongQueue;
-import SongPackage.SongFileManager.SearchResultYt;
+import SongPackage.SongFileManager.DTOsearchResultYt;
 import java.util.concurrent.CompletableFuture;
 
 public class SchManager {
@@ -16,21 +16,21 @@ public class SchManager {
            
     }
     
-    public CompletableFuture<SearchResultYt> addToSearchQueue(String SongName){
+    public CompletableFuture<DTOsearchResultYt> addToSearchQueue(String SongName){
         
         this.songToSearch.addSong(SongName);
         return CompletableFuture.supplyAsync(()->searchSongService());
-        
+             
     }
     
-    private SearchResultYt searchSongService(){
+    private DTOsearchResultYt searchSongService(){
         
         if(this.songToSearch.hasNextSong()){
             
            String songName = this.songToSearch.nextSong();
            String id = this.searchId(songName);
             
-           return new SearchResultYt(songName,id);
+           return new DTOsearchResultYt(songName,id);
             
         }       
         return null;             

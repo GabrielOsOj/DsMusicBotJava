@@ -1,13 +1,13 @@
 package SongPackage.SongFileManager;
 
 
-public class SearchResultYt {
+public class DTOsearchResultYt {
     
     final private String discordSearchParam;
     final private String ytIdResponse;
     
     
-    public SearchResultYt(String userDiscordParamSearch, String ytIdResponse){
+    public DTOsearchResultYt(String userDiscordParamSearch, String ytIdResponse){
                
         this.discordSearchParam = userDiscordParamSearch;
         this.ytIdResponse = ytIdResponse;
