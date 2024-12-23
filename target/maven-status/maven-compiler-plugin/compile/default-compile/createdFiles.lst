@@ -4,6 +4,7 @@ SongPackage\SongFileManager\SearchPackage\SchManager.class
 SongPackage\GuildPlayer.class
 DiscordJavaBotV2.class
 SongPackage\SongManager.class
+SongPackage\Interfaces\IFsongFinish.class
 MusicManager\searchManager\SchSongQueue.class
 SongPackage\SongManager$1.class
 SongPackage\SongFileManager\SearchPackage\IdQueue.class

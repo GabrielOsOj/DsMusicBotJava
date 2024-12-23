@@ -60,8 +60,8 @@ public class DwnDownload {
 //        System.out.println("Status: "+response.status());
         VideoInfo video = response.data();
         
-//      this.tempFile = new SongDownloadedFile(video.details().title());
-        this.tempFile = new SongDownloadedFile("aa");
+       this.tempFile = new SongDownloadedFile(video.details().title());
+
 
         //return response.data().bestAudioFormat();
         return video.bestAudioFormat();

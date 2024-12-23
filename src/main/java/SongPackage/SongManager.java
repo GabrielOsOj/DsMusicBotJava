@@ -1,5 +1,6 @@
 package SongPackage;
 
+import SongPackage.Interfaces.IFsongFinish;
 import SongPackage.SongFileManager.SongDownloadedFile;
 import SongPackage.SongFileManager.SongSADmanager;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -9,17 +10,22 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-public class SongManager {
+public class SongManager implements IFsongFinish {
 
     final private AudioPlayerManager pm;
     final private GuildPlayer player;
     final private SongSADmanager SAD;
+
+    private Queue<SongDownloadedFile> songQueue = new LinkedList<>();
 
     public SongManager() {
 
@@ -30,14 +36,15 @@ public class SongManager {
         AudioSourceManagers.registerRemoteSources(pm);
 
         this.player = new GuildPlayer(pm);
-
+        this.player.scheduler.SetListener(this);
     }
 
     public void searchSong(String songName, Guild channel) throws InterruptedException, ExecutionException {
 
         GuildPlayer musicPlayer = this.player;
-       SongDownloadedFile song = this.searchAndDownload(songName);
+        SongDownloadedFile song = this.searchAndDownload(songName);
 
+        this.songQueue.add(song);
         this.pm.loadItemOrdered(musicPlayer, song.getSongPath(), new AudioLoadResultHandler() {
 
             @Override
@@ -63,44 +70,31 @@ public class SongManager {
         });
 
     }
-    
-//    public AudioSendHandler createAudioHandler() {
-//
-//        if (this.audioSendHanlder == null) {
-//
-//            this.audioSendHanlder = new AudioPlayerProvider();
-//
-//        }
-//        
-//        return this.audioSendHanlder;
-//    }
-        
+
     //Control metods
     public void playSong(AudioTrack at, Guild channel) {
 
         //change channel
         this.joinVoiceChannel(channel.getAudioManager(),
                 this.player.getSendHandler());
-        
+
         player.scheduler.queue(at);
     }
 
-    
-    private void joinVoiceChannel(AudioManager manager, 
-            AudioSendHandler soundHandler){
-        
-        if(!manager.isConnected()){
-            for(VoiceChannel vc : manager.getGuild().getVoiceChannels()){
-                
+    private void joinVoiceChannel(AudioManager manager,
+            AudioSendHandler soundHandler) {
+
+        if (!manager.isConnected()) {
+            for (VoiceChannel vc : manager.getGuild().getVoiceChannels()) {
+
                 manager.openAudioConnection(vc);
                 manager.setSendingHandler(soundHandler);
                 break;
-                
+
             }
         }
     }
-    
-    
+
     public void pause() {
         this.player.player.setPaused(true);
     }
@@ -124,9 +118,36 @@ public class SongManager {
 
     }
 
+    private void DeleteLastSong() {
+
+        if (this.songQueue.peek() != null) {
+
+            this.SAD.SongDelete(this.songQueue.poll());
+
+        }
+    }
+
     private SongDownloadedFile searchAndDownload(String songName) throws InterruptedException, ExecutionException {
 
         return this.SAD.SAD(songName);
 
     }
+
+    @Override
+    public void onSongFinish() {
+
+        SongDownloadedFile song = this.songQueue.poll();
+
+        if (song == null) {
+            return;
+        }
+
+        try {
+
+            this.SAD.SongDelete(song);
+
+        } catch (Exception e) {
+        }
+    }
+
 }

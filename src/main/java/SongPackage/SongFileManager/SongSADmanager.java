@@ -2,6 +2,9 @@ package SongPackage.SongFileManager;
 
 import SongPackage.SongFileManager.DownloadPackage.DwnManager;
 import SongPackage.SongFileManager.SearchPackage.SchManager;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -24,12 +27,27 @@ public class SongSADmanager {
 
         DTOsearchResultYt ytResult
                 = this.searchMG.addToSearchQueue(songName).get();
-       
+
         SongDownloadedFile f = this.downloadMG.addSongToDownloadQueue(ytResult).get();
-        
+
         return new SongDownloadedFile()
                 .setSongPath(f.getSongPath())
                 .setTitle(f.getTitle());
     }
 
+    public boolean SongDelete(SongDownloadedFile song) {
+
+        try {
+            
+            Files.deleteIfExists(Paths.get(song.getSongPath()));
+            System.out.println("Song: " + song.getTitle() + " as delete");
+
+        } catch (IOException e) {
+            System.out.println("Program cant delete song named: "+song.getTitle());
+            e.printStackTrace();
+            
+        }
+        return true;
+
+    }
 }
