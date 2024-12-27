@@ -3,6 +3,7 @@ SongPackage\SongFileManager\DTOsearchResultYt.class
 SongPackage\SongFileManager\SearchPackage\SchManager.class
 SongPackage\GuildPlayer.class
 DiscordJavaBotV2.class
+DiscordBotPackage\BotFinalMessages.class
 SongPackage\SongManager.class
 SongPackage\Interfaces\IFsongFinish.class
 MusicManager\searchManager\SchSongQueue.class
