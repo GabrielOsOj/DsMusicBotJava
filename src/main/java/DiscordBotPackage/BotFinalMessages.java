@@ -24,7 +24,8 @@ public class BotFinalMessages {
     public static final String MSG_INPUT_NEXT_SHORTHAND = "n";
     public static final String MSG_RESPONSE_NEXT = "Saltando..";
     
-    
+    public static final String MSG_RESPONSE_PLAYING = "Reproduciendo: ";
+    public static final String MSG_RESPONSE_ADD_TO_QUEUE = "Se añadio a la cola: ";
     
     
     

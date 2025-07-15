@@ -1,70 +1,126 @@
 package SongPackage.SongFileManager.DownloadPackage;
 
 import SongPackage.SongFileManager.SongDownloadedFile;
-import com.github.kiulian.downloader.YoutubeDownloader;
-import com.github.kiulian.downloader.downloader.client.ClientType;
-import com.github.kiulian.downloader.downloader.client.Clients;
-import com.github.kiulian.downloader.downloader.request.Request;
-import com.github.kiulian.downloader.downloader.request.RequestVideoFileDownload;
-import com.github.kiulian.downloader.downloader.request.RequestVideoInfo;
-import com.github.kiulian.downloader.downloader.response.Response;
-import com.github.kiulian.downloader.model.videos.VideoInfo;
-import com.github.kiulian.downloader.model.videos.formats.AudioFormat;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class DwnDownload {
 
-    final private YoutubeDownloader dw;
-    final private File cachePath;
-    private SongDownloadedFile tempFile;
+	final private File cachePath;
 
-    public DwnDownload(String cachePath) {
+	private SongDownloadedFile tempFile;
 
-        this.dw = new YoutubeDownloader();
-        this.createCacheFolder(cachePath);
-        this.cachePath = new File(cachePath);
-    }
+	private final int ATTEMPS_COUNT = 10;
 
-    private void createCacheFolder(String path) {
-        new File(path).mkdir();
-    }
+	private final String MSG_ERROR = "ERROR GETTING AUDIO SOURCE URL";
 
-    protected SongDownloadedFile download(String songId) {
+	public DwnDownload(String cachePath) {
+		this.createCacheFolder(cachePath);
+		this.cachePath = new File(cachePath);
+	}
 
-        
-        //esto tiene que retornarme un songDownloadedFile, debe contener la ruta y el nombre de la cancion idealmente; 
-        //petition        
-        AudioFormat audioFormat = this.getAudioFormat(songId);
-        
-        //preparing to download
-        RequestVideoFileDownload requestDW
-                = new RequestVideoFileDownload(audioFormat)
-                        .clientType(ClientType.ANDROID_VR)
-                        .saveTo(this.cachePath);
+	private void createCacheFolder(String path) {
+		new File(path).mkdir();
+	}
 
-        Response<File> song = this.dw.downloadVideoFile(requestDW);
-        
-        File songDownload = song.data();
-        this.tempFile.setSongPath(songDownload.getPath())
-                .setSongYtId(songId);
+	protected SongDownloadedFile download(String songId) {
+		// this return songDownloadFile, contains the path and the name of song
+		String[] audioSourceUrl = this.urlAudioSource(songId);
+		Long audioSize = this.getAudioSize(audioSourceUrl[1]);
+		this.downloadInOnePart(URI.create(audioSourceUrl[1]), audioSize, audioSourceUrl[0]);
 
-        return this.tempFile;
-    }
+		return this.tempFile;
+	}
 
-    private AudioFormat getAudioFormat(String songId) {
+	private String[] urlAudioSource(String url) {
 
-        RequestVideoInfo request = new RequestVideoInfo(songId)
-                .clientType(ClientType.ANDROID_VR);
-        
-        Response<VideoInfo> response = this.dw.getVideoInfo(request);
-//        System.out.println("Status: "+response.status());
-        VideoInfo video = response.data();
-        
-       this.tempFile = new SongDownloadedFile(video.details().title());
+		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title");
 
+		builder.redirectErrorStream(true);
 
-        //return response.data().bestAudioFormat();
-        return video.bestAudioFormat();
-    }
+		try {
+			Process p = builder.start();
+			// p.getInputStream().transferTo(System.out);
+			p.waitFor();
+
+			BufferedReader bf = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			String line;
+			StringBuilder output = new StringBuilder();
+
+			while ((line = bf.readLine()) != null) {
+				output.append(line);
+				output.append("\n");
+			}
+			return output.toString().split("\n");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private Long getAudioSize(String audioSourceUrl) {
+		Long tamanioAudioSource = 0l;
+		int attempts = 0;
+		String audioSource;
+		do {
+			try {
+				Thread.sleep(1000);
+				URI uri = URI.create(audioSourceUrl);
+				HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
+
+				HttpResponse rp = HttpClient.newHttpClient().send(request, BodyHandlers.ofInputStream());
+
+				tamanioAudioSource = rp.headers().firstValueAsLong("Content-Length").getAsLong();
+
+				if (tamanioAudioSource == 0l) {
+					attempts++;
+					System.out.println("Could not get size, retrying");
+					Thread.sleep(1000);
+				}
+
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (attempts > this.ATTEMPS_COUNT) {
+				throw new RuntimeException(this.MSG_ERROR);
+			}
+
+		}
+		while (tamanioAudioSource == 0l);
+		return tamanioAudioSource;
+	}
+
+	private void downloadInOnePart(URI uri, long end, String songName) {
+		HttpRequest req = HttpRequest.newBuilder().uri(uri).header("Range", "bytes=" + 0 + "-" + end).build();
+
+		try {
+			String name = this.cachePath + "\\" + songName + ".m4a";
+			Files.deleteIfExists(Paths.get(name));
+			File file = new File(name);
+
+			HttpResponse resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofFile(file.toPath()));
+
+			this.tempFile = new SongDownloadedFile()
+					.setSongPath(file.getAbsolutePath())
+					.setTitle(songName);
+
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
 
 }

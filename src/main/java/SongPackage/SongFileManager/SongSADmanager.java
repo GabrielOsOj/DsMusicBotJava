@@ -20,17 +20,18 @@ public class SongSADmanager {
     public SongSADmanager() {
 
         this.searchMG = new SchManager();
-        this.downloadMG = new DwnManager(System.getProperty("user.dir") + "\\cache");
+        this.downloadMG = new DwnManager(System.getProperty("user.dir") + "\\cache\\");
     }
 
     public SongDownloadedFile SAD(String songName) throws InterruptedException, ExecutionException {
 
         DTOsearchResultYt ytResult
                 = this.searchMG.addToSearchQueue(songName).get();
-
+		System.out.println("cosa");
         SongDownloadedFile f = this.downloadMG.addSongToDownloadQueue(ytResult).get();
-
-        return new SongDownloadedFile()
+		System.out.println("cosa2");
+		
+		return new SongDownloadedFile()
                 .setSongPath(f.getSongPath())
                 .setTitle(f.getTitle());
     }

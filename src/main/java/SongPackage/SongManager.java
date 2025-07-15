@@ -12,7 +12,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
@@ -43,23 +42,23 @@ public class SongManager implements IFsongFinish {
 
         GuildPlayer musicPlayer = this.player;
         SongDownloadedFile song = this.searchAndDownload(songName);
-
+    
+        
         this.songQueue.add(song);
         this.pm.loadItemOrdered(musicPlayer, song.getSongPath(), new AudioLoadResultHandler() {
 
             @Override
             public void trackLoaded(AudioTrack at) {
                 playSong(at, channel);
+                
             }
 
             @Override
-            public void playlistLoaded(AudioPlaylist ap) {
-                System.out.println("playlist");
+            public void playlistLoaded(AudioPlaylist ap) {               
             }
 
             @Override
-            public void noMatches() {
-                System.out.println("Not found");
+            public void noMatches() {             
             }
 
             @Override
@@ -118,15 +117,6 @@ public class SongManager implements IFsongFinish {
 
     }
 
-    private void DeleteLastSong() {
-
-        if (this.songQueue.peek() != null) {
-
-            this.SAD.SongDelete(this.songQueue.poll());
-
-        }
-    }
-
     private SongDownloadedFile searchAndDownload(String songName) throws InterruptedException, ExecutionException {
 
         return this.SAD.SAD(songName);
@@ -147,6 +137,9 @@ public class SongManager implements IFsongFinish {
             this.SAD.SongDelete(song);
 
         } catch (Exception e) {
+
+            System.err.println("Program cannot delete song from cache!");
+
         }
     }
 

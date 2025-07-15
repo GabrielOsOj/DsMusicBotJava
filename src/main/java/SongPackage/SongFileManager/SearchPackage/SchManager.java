@@ -17,7 +17,7 @@ public class SchManager {
     }
     
     public CompletableFuture<DTOsearchResultYt> addToSearchQueue(String SongName){
-        
+       
         this.songToSearch.addSong(SongName);
         return CompletableFuture.supplyAsync(()->searchSongService());
              
@@ -37,7 +37,7 @@ public class SchManager {
     }
     
     private String searchId(String songName){
-        
+
         return this.search.searchSongId(songName);
         
     }

@@ -153,7 +153,7 @@ public class SchSearch {
 
         HttpURLConnection newConnection = (HttpURLConnection) url.openConnection();
         newConnection.setRequestMethod("GET");
-        newConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+        newConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 OPR/120.0.0.0");
         newConnection.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 
         return newConnection;
