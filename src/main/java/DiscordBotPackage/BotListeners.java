@@ -68,6 +68,7 @@ public class BotListeners extends ListenerAdapter {
                 
                 System.out.println(BotFinalMessages.MSG_RESPONSE_SEARCHING + songName);
                 this.sg.searchSong(songName, msg.getGuild());
+				System.out.println(msg.getMember().getVoiceState().getChannel().getName());
                 this.msgChat
                         .sendMessage(BotFinalMessages.MSG_RESPONSE_PLAYING+songName)
                         .queue();

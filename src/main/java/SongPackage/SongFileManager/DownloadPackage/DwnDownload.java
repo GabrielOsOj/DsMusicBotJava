@@ -3,6 +3,8 @@ package SongPackage.SongFileManager.DownloadPackage;
 import SongPackage.SongFileManager.SongDownloadedFile;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -18,7 +20,9 @@ public class DwnDownload {
 
 	private SongDownloadedFile tempFile;
 
-	private final int ATTEMPS_COUNT = 10;
+	private final int CHUNK_SIZE = 128 * 1024;
+
+	private final int ATTEMPS_COUNT = 1;
 
 	private final String MSG_ERROR = "ERROR GETTING AUDIO SOURCE URL";
 
@@ -33,16 +37,25 @@ public class DwnDownload {
 
 	protected SongDownloadedFile download(String songId) {
 		// this return songDownloadFile, contains the path and the name of song
+		// 0 size in bytes, 1 title, 2 url to source
 		String[] audioSourceUrl = this.urlAudioSource(songId);
-		Long audioSize = this.getAudioSize(audioSourceUrl[1]);
-		this.downloadInOnePart(URI.create(audioSourceUrl[1]), audioSize, audioSourceUrl[0]);
+		// Long audioSize = Long.parseLong(audioSourceUrl[0]);
+		// Long audioSize = this.getAudioSize(audioSourceUrl[2]);
+
+		try {
+			this.downloadWithoutSize(URI.create(audioSourceUrl[2]), audioSourceUrl[1]);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return this.tempFile;
 	}
 
 	private String[] urlAudioSource(String url) {
 
-		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title");
+		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title",
+				"--print", "\"%(filesize,filesize_approx)s\"");
 
 		builder.redirectErrorStream(true);
 
@@ -68,6 +81,7 @@ public class DwnDownload {
 		return null;
 	}
 
+	@Deprecated
 	private Long getAudioSize(String audioSourceUrl) {
 		Long tamanioAudioSource = 0l;
 		int attempts = 0;
@@ -79,7 +93,9 @@ public class DwnDownload {
 				HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
 
 				HttpResponse rp = HttpClient.newHttpClient().send(request, BodyHandlers.ofInputStream());
-
+				// rp.headers().map().forEach((name,value)->{
+				// System.out.println(name+" "+value+"\n");
+				// });
 				tamanioAudioSource = rp.headers().firstValueAsLong("Content-Length").getAsLong();
 
 				if (tamanioAudioSource == 0l) {
@@ -94,7 +110,7 @@ public class DwnDownload {
 			}
 
 			if (attempts > this.ATTEMPS_COUNT) {
-				throw new RuntimeException(this.MSG_ERROR);
+				break;
 			}
 
 		}
@@ -102,6 +118,7 @@ public class DwnDownload {
 		return tamanioAudioSource;
 	}
 
+	@Deprecated
 	private void downloadInOnePart(URI uri, long end, String songName) {
 		HttpRequest req = HttpRequest.newBuilder().uri(uri).header("Range", "bytes=" + 0 + "-" + end).build();
 
@@ -112,14 +129,58 @@ public class DwnDownload {
 
 			HttpResponse resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofFile(file.toPath()));
 
-			this.tempFile = new SongDownloadedFile()
-					.setSongPath(file.getAbsolutePath())
-					.setTitle(songName);
+			this.tempFile = new SongDownloadedFile().setSongPath(file.getAbsolutePath()).setTitle(songName);
 
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+
+	}
+
+	private void downloadWithoutSize(URI uri, String songName) throws IOException, InterruptedException {
+		int start = 0;
+		boolean hasEnd = false;
+
+		String name = this.cachePath + "\\" + songName + ".m4a";
+		try {
+			Files.deleteIfExists(Paths.get(name));
+		}
+		catch (Exception e) {
+		}
+		File file = new File(name);
+		FileOutputStream songData = new FileOutputStream(file);
+
+		while (hasEnd != true) {
+
+			int endd = start + this.CHUNK_SIZE - 1;
+
+			HttpRequest req = HttpRequest.newBuilder()
+				.uri(uri)
+				.header("Range", "bytes=" + start + "-" + endd)
+				.header("Accept-Encoding", "identity")
+				.build();
+
+			HttpResponse resp = HttpClient.newHttpClient().send(req, BodyHandlers.ofByteArray());
+
+			if (resp.statusCode() == 302) {
+				uri = URI.create(resp.headers().firstValue("location").orElse(null));
+				continue;
+			}
+
+			byte[] b = (byte[]) resp.body();
+			songData.write(b);
+
+			if (b.length < this.CHUNK_SIZE) {
+
+				hasEnd = true;
+			}
+
+			start += this.CHUNK_SIZE;
+
+		}
+
+		this.tempFile = new SongDownloadedFile().setSongPath(file.getAbsolutePath()).setTitle(songName);
 
 	}
 

@@ -9,24 +9,24 @@ public class DiscordJavaBotV2 {
 
 	public static void main(String[] args) {
 
-		String key;
-		if (args.length == 0) {
-			Scanner scanner = new Scanner(System.in);
-			System.out.println("Paste you discord key to start the bot");
-			key = scanner.next();
-		}
-		else {
-			key = args[0];
-		}
-		
-		BotManager bot = new BotManager();
-		bot.run(key);
+//		String key;
+//		if (args.length == 0) {
+//			Scanner scanner = new Scanner(System.in);
+//			System.out.println("Paste you discord key to start the bot");
+//			key = scanner.next();
+//		}
+//		else {
+//			key = args[0];
+//		}
+//		
+//		BotManager bot = new BotManager();
+//		bot.run(key);
 
 		/* TEST */
 
-		// Constantes cts = new Constantes();
-		// BotManager bot = new BotManager();
-		// bot.run(cts.getKey("DISCORD_BOT_TOKEN"));
+		 Constantes cts = new Constantes();
+		 BotManager bot = new BotManager();
+		 bot.run(cts.getKey("DISCORD_BOT_TOKEN"));
 
 		// SongManager sg = new SongManager();
 		//
