@@ -16,131 +16,141 @@ import java.util.concurrent.ExecutionException;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 public class SongManager implements IFsongFinish {
 
-    final private AudioPlayerManager pm;
-    final private GuildPlayer player;
-    final private SongSADmanager SAD;
+	final private AudioPlayerManager pm;
 
-    private Queue<SongDownloadedFile> songQueue = new LinkedList<>();
+	final private GuildPlayer player;
 
-    public SongManager() {
+	final private SongSADmanager SAD;
 
-        this.SAD = new SongSADmanager();
+	private Queue<SongDownloadedFile> songQueue = new LinkedList<>();
 
-        pm = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerLocalSource(pm);
-        AudioSourceManagers.registerRemoteSources(pm);
+	public SongManager() {
 
-        this.player = new GuildPlayer(pm);
-        this.player.scheduler.SetListener(this);
-    }
+		this.SAD = new SongSADmanager();
 
-    public void searchSong(String songName, Guild channel) throws InterruptedException, ExecutionException {
+		pm = new DefaultAudioPlayerManager();
+		AudioSourceManagers.registerLocalSource(pm);
+		AudioSourceManagers.registerRemoteSources(pm);
 
-        GuildPlayer musicPlayer = this.player;
-        SongDownloadedFile song = this.searchAndDownload(songName);
-    
-        
-        this.songQueue.add(song);
-        this.pm.loadItemOrdered(musicPlayer, song.getSongPath(), new AudioLoadResultHandler() {
+		this.player = new GuildPlayer(pm);
+		this.player.scheduler.SetListener(this);
+	}
 
-            @Override
-            public void trackLoaded(AudioTrack at) {
-                playSong(at, channel);
-                
-            }
+	public void searchSong(String songName, Guild channel, VoiceChannel voiceChannel)
+			throws InterruptedException, ExecutionException {
+		// public void searchSong(String songName, AudioChannelUnion channel) throws
+		// InterruptedException, ExecutionException {
 
-            @Override
-            public void playlistLoaded(AudioPlaylist ap) {               
-            }
+		GuildPlayer musicPlayer = this.player;
+		 SongDownloadedFile song = this.searchAndDownload(songName);
+//		SongDownloadedFile song = new SongDownloadedFile("null");
+//		song.setSongPath(
+//				"C:\\Users\\cuent\\OneDrive\\Escritorio\\DS_JAVA_MS_bot\\DiscordJavaBotV2\\cacheNeovaii - In the Night.m4a");
 
-            @Override
-            public void noMatches() {             
-            }
+		this.songQueue.add(song);
+		this.pm.loadItemOrdered(musicPlayer, song.getSongPath(), new AudioLoadResultHandler() {
 
-            @Override
-            public void loadFailed(FriendlyException fe) {
-                System.out.println("Song Load failed");
-            }
+			@Override
+			public void trackLoaded(AudioTrack at) {
+				playSong(at, voiceChannel);
 
-        });
+			}
 
-    }
+			@Override
+			public void playlistLoaded(AudioPlaylist ap) {
+			}
 
-    //Control metods
-    public void playSong(AudioTrack at, Guild channel) {
+			@Override
+			public void noMatches() {
+			}
 
-        //change channel
-        this.joinVoiceChannel(channel.getAudioManager(),
-                this.player.getSendHandler());
+			@Override
+			public void loadFailed(FriendlyException fe) {
+				System.out.println("Song Load failed");
+			}
 
-        player.scheduler.queue(at);
-    }
+		});
 
-    private void joinVoiceChannel(AudioManager manager,
-            AudioSendHandler soundHandler) {
+	}
 
-        if (!manager.isConnected()) {
-            for (VoiceChannel vc : manager.getGuild().getVoiceChannels()) {
+	// Control metods
+	public void playSong(AudioTrack at, VoiceChannel channel) {
+		// public void playSong(AudioTrack at, AudioChannelUnion channel) {
 
-                manager.openAudioConnection(vc);
-                manager.setSendingHandler(soundHandler);
-                break;
+		// change channel
+		// this.joinVoiceChannel(channel.getAudioManager(), this.player.getSendHandler());
+		this.joinVoiceChannel(channel, this.player.getSendHandler());
 
-            }
-        }
-    }
+		player.scheduler.queue(at);
+	}
 
-    public void pause() {
-        this.player.player.setPaused(true);
-    }
+	// private void joinVoiceChannel(AudioManager manager, AudioSendHandler soundHandler)
+	// {
+	private void joinVoiceChannel(VoiceChannel manager, AudioSendHandler soundHandler) {
 
-    public void pauseAndPlay() {
+		AudioManager audioManager = manager.getGuild().getAudioManager();
 
-        if (this.player.player.isPaused()) {
+		if (!audioManager.isConnected()) {
 
-            this.player.player.setPaused(false);
-            return;
-        }
+			audioManager.openAudioConnection(manager);
+			audioManager.setSendingHandler(soundHandler);
 
-        this.player.player.setPaused(true);
-    }
+		}
+	}
 
-    ;
- 
-    public void nextTrack() {
+	public void pause() {
+		this.player.player.setPaused(true);
+	}
 
-        this.player.scheduler.nextTrack();
+	public void pauseAndPlay() {
 
-    }
+		if (this.player.player.isPaused()) {
 
-    private SongDownloadedFile searchAndDownload(String songName) throws InterruptedException, ExecutionException {
+			this.player.player.setPaused(false);
+			return;
+		}
 
-        return this.SAD.SAD(songName);
+		this.player.player.setPaused(true);
+	}
 
-    }
+	;
 
-    @Override
-    public void onSongFinish() {
+	public void nextTrack() {
 
-        SongDownloadedFile song = this.songQueue.poll();
+		this.player.scheduler.nextTrack();
 
-        if (song == null) {
-            return;
-        }
+	}
 
-        try {
+	private SongDownloadedFile searchAndDownload(String songName) throws InterruptedException, ExecutionException {
 
-            this.SAD.SongDelete(song);
+		return this.SAD.SAD(songName);
 
-        } catch (Exception e) {
+	}
 
-            System.err.println("Program cannot delete song from cache!");
+	@Override
+	public void onSongFinish() {
 
-        }
-    }
+		SongDownloadedFile song = this.songQueue.poll();
+
+		if (song == null) {
+			return;
+		}
+
+		try {
+
+			this.SAD.SongDelete(song);
+
+		}
+		catch (Exception e) {
+
+			System.err.println("Program cannot delete song from cache!");
+
+		}
+	}
 
 }

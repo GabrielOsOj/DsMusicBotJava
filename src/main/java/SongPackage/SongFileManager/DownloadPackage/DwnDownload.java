@@ -37,13 +37,10 @@ public class DwnDownload {
 
 	protected SongDownloadedFile download(String songId) {
 		// this return songDownloadFile, contains the path and the name of song
-		// 0 size in bytes, 1 title, 2 url to source
 		String[] audioSourceUrl = this.urlAudioSource(songId);
-		// Long audioSize = Long.parseLong(audioSourceUrl[0]);
-		// Long audioSize = this.getAudioSize(audioSourceUrl[2]);
 
 		try {
-			this.downloadWithoutSize(URI.create(audioSourceUrl[2]), audioSourceUrl[1]);
+			this.downloadWithoutSize(URI.create(audioSourceUrl[1]), audioSourceUrl[0]);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -54,14 +51,12 @@ public class DwnDownload {
 
 	private String[] urlAudioSource(String url) {
 
-		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title",
-				"--print", "\"%(filesize,filesize_approx)s\"");
+		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title");
 
 		builder.redirectErrorStream(true);
 
 		try {
 			Process p = builder.start();
-			// p.getInputStream().transferTo(System.out);
 			p.waitFor();
 
 			BufferedReader bf = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -81,63 +76,6 @@ public class DwnDownload {
 		return null;
 	}
 
-	@Deprecated
-	private Long getAudioSize(String audioSourceUrl) {
-		Long tamanioAudioSource = 0l;
-		int attempts = 0;
-		String audioSource;
-		do {
-			try {
-				Thread.sleep(1000);
-				URI uri = URI.create(audioSourceUrl);
-				HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
-
-				HttpResponse rp = HttpClient.newHttpClient().send(request, BodyHandlers.ofInputStream());
-				// rp.headers().map().forEach((name,value)->{
-				// System.out.println(name+" "+value+"\n");
-				// });
-				tamanioAudioSource = rp.headers().firstValueAsLong("Content-Length").getAsLong();
-
-				if (tamanioAudioSource == 0l) {
-					attempts++;
-					System.out.println("Could not get size, retrying");
-					Thread.sleep(1000);
-				}
-
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			if (attempts > this.ATTEMPS_COUNT) {
-				break;
-			}
-
-		}
-		while (tamanioAudioSource == 0l);
-		return tamanioAudioSource;
-	}
-
-	@Deprecated
-	private void downloadInOnePart(URI uri, long end, String songName) {
-		HttpRequest req = HttpRequest.newBuilder().uri(uri).header("Range", "bytes=" + 0 + "-" + end).build();
-
-		try {
-			String name = this.cachePath + "\\" + songName + ".m4a";
-			Files.deleteIfExists(Paths.get(name));
-			File file = new File(name);
-
-			HttpResponse resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofFile(file.toPath()));
-
-			this.tempFile = new SongDownloadedFile().setSongPath(file.getAbsolutePath()).setTitle(songName);
-
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
-
 	private void downloadWithoutSize(URI uri, String songName) throws IOException, InterruptedException {
 		int start = 0;
 		boolean hasEnd = false;
@@ -153,11 +91,11 @@ public class DwnDownload {
 
 		while (hasEnd != true) {
 
-			int endd = start + this.CHUNK_SIZE - 1;
+			int end = start + this.CHUNK_SIZE - 1;
 
 			HttpRequest req = HttpRequest.newBuilder()
 				.uri(uri)
-				.header("Range", "bytes=" + start + "-" + endd)
+				.header("Range", "bytes=" + start + "-" + end)
 				.header("Accept-Encoding", "identity")
 				.build();
 
