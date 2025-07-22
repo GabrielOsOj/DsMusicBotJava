@@ -11,57 +11,74 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class TrackScheduler extends AudioEventAdapter {
 
-    private final BlockingQueue<AudioTrack> songQueue;
-    private final AudioPlayer player;
-    public IFsongFinish listener;
+	private final BlockingQueue<AudioTrack> songQueue;
 
-    public TrackScheduler(AudioPlayer player) {
+	private BlockingQueue<String> songNameQueue;
 
-        this.player = player;
-        this.songQueue = new LinkedBlockingQueue<>();
+	private final AudioPlayer player;
 
-    }
+	public IFsongFinish listener;
 
-    public void SetListener(IFsongFinish listener) {
+	public TrackScheduler(AudioPlayer player) {
 
-        this.listener = listener;
+		this.player = player;
+		this.songQueue = new LinkedBlockingQueue<>();
+		this.songNameQueue = new LinkedBlockingQueue<>();
 
-    }
+	}
 
-    public void queue(AudioTrack song) {
+	public void SetListener(IFsongFinish listener) {
 
-        if (!player.startTrack(song, true)) {
-            songQueue.offer(song);
-        }
+		this.listener = listener;
 
-    }
+	}
 
-    public void nextTrack() {
+	public void queue(AudioTrack song, String title) {
 
-        AudioTrack track = this.songQueue.poll();
+		if (!player.startTrack(song, true)) {
+			songQueue.offer(song);
+			songNameQueue.offer(title);
 
-        if (track != null) {
+			this.listener.onSongAddedToQueue(title);
 
-            this.player.startTrack(track.makeClone(), false);     
+		}
+		else {
+			this.listener.onSongStarts(title);
+		}
+	}/*
+		 * Si queres que se vea el nombre bien, hace otra pila en donde almaces el nombre
+		 * que te viene por title en queue y a emedidad que van pasando los temas los vas
+		 * trayendo, suerte :D
+		 */
 
-        } else {
+	public void nextTrack() {
 
-            this.player.stopTrack();
+		AudioTrack track = this.songQueue.poll();
 
-        }
-        
-        this.listener.onSongFinish();
+		if (track != null) {
 
-    }
+			this.listener.onSongStarts(this.songNameQueue.poll());
+			this.player.startTrack(track.makeClone(), false);
 
-    @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+		}
+		else {
 
-        if (endReason == AudioTrackEndReason.FINISHED) {
+			this.player.stopTrack();
 
-            this.nextTrack();
-            
-        }
-    }
+		}
+
+		this.listener.onSongFinish();
+
+	}
+
+	@Override
+	public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+
+		if (endReason == AudioTrackEndReason.FINISHED) {
+
+			this.nextTrack();
+
+		}
+	}
 
 }

@@ -1,5 +1,6 @@
 package SongPackage;
 
+import DiscordBotPackage.BotFinalMessages;
 import SongPackage.Interfaces.IFsongFinish;
 import SongPackage.SongFileManager.SongDownloadedFile;
 import SongPackage.SongFileManager.SongSADmanager;
@@ -16,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -26,6 +28,8 @@ public class SongManager implements IFsongFinish {
 	final private GuildPlayer player;
 
 	final private SongSADmanager SAD;
+
+	private MessageChannel textChannel;
 
 	private Queue<SongDownloadedFile> songQueue = new LinkedList<>();
 
@@ -41,24 +45,22 @@ public class SongManager implements IFsongFinish {
 		this.player.scheduler.SetListener(this);
 	}
 
-	public void searchSong(String songName, Guild channel, VoiceChannel voiceChannel)
-			throws InterruptedException, ExecutionException {
-		// public void searchSong(String songName, AudioChannelUnion channel) throws
-		// InterruptedException, ExecutionException {
+	public void setTextChannel(MessageChannel textChannel) {
+		this.textChannel = textChannel;
+	};
+
+	public void searchSong(String songName, VoiceChannel voiceChannel) throws InterruptedException, ExecutionException {
 
 		GuildPlayer musicPlayer = this.player;
-		 SongDownloadedFile song = this.searchAndDownload(songName);
-//		SongDownloadedFile song = new SongDownloadedFile("null");
-//		song.setSongPath(
-//				"C:\\Users\\cuent\\OneDrive\\Escritorio\\DS_JAVA_MS_bot\\DiscordJavaBotV2\\cacheNeovaii - In the Night.m4a");
+		SongDownloadedFile song = this.searchAndDownload(songName);
 
 		this.songQueue.add(song);
 		this.pm.loadItemOrdered(musicPlayer, song.getSongPath(), new AudioLoadResultHandler() {
 
 			@Override
 			public void trackLoaded(AudioTrack at) {
-				playSong(at, voiceChannel);
-
+				
+				playSong(at, voiceChannel,song.getTitle());
 			}
 
 			@Override
@@ -79,18 +81,13 @@ public class SongManager implements IFsongFinish {
 	}
 
 	// Control metods
-	public void playSong(AudioTrack at, VoiceChannel channel) {
-		// public void playSong(AudioTrack at, AudioChannelUnion channel) {
+	public void playSong(AudioTrack at, VoiceChannel channel, String title) {
 
-		// change channel
-		// this.joinVoiceChannel(channel.getAudioManager(), this.player.getSendHandler());
 		this.joinVoiceChannel(channel, this.player.getSendHandler());
 
-		player.scheduler.queue(at);
+		player.scheduler.queue(at,title);
 	}
 
-	// private void joinVoiceChannel(AudioManager manager, AudioSendHandler soundHandler)
-	// {
 	private void joinVoiceChannel(VoiceChannel manager, AudioSendHandler soundHandler) {
 
 		AudioManager audioManager = manager.getGuild().getAudioManager();
@@ -116,9 +113,7 @@ public class SongManager implements IFsongFinish {
 		}
 
 		this.player.player.setPaused(true);
-	}
-
-	;
+	};
 
 	public void nextTrack() {
 
@@ -151,6 +146,21 @@ public class SongManager implements IFsongFinish {
 			System.err.println("Program cannot delete song from cache!");
 
 		}
+	}
+
+	@Override
+	public void onSongStarts(String songName) {
+		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_PLAYING + songName).queue();
+	};
+
+	@Override
+	public void onSongAddedToQueue(String songName) {
+		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_ADD_TO_QUEUE + songName).queue();
+	};
+	
+	@Override
+	public void onSongsEnded(){
+		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_NO_MORE_SONGS);
 	}
 
 }
