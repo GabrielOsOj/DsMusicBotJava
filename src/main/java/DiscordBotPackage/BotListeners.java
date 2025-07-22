@@ -49,7 +49,7 @@ public class BotListeners extends ListenerAdapter {
 			this.msgChat.sendMessage(BotFinalMessages.MSG_RESPONSE_PONG).queue();
 		}
 
-		if(isMusicCommand(msgText)&&!this.isConnectedOnVoiceChat(msg.getMember())){
+		if(isMusicCommand(msgText)&&!this.isMemberConnectedOnVoiceChat(msg.getMember())){
 			this.msgChat.sendMessage(BotFinalMessages.MSG_RESPONSE_NOT_ON_VOICE_CHANNEL).queue();
 			return;
 		}
@@ -91,9 +91,10 @@ public class BotListeners extends ListenerAdapter {
 		}
 
 	}
-
+	
+	
 	// utils
-	private boolean isConnectedOnVoiceChat(Member member) {
+	private boolean isMemberConnectedOnVoiceChat(Member member) {
 
 		return member.getVoiceState().getChannel() != null;
 

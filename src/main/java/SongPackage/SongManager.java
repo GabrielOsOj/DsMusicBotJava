@@ -59,8 +59,8 @@ public class SongManager implements IFsongFinish {
 
 			@Override
 			public void trackLoaded(AudioTrack at) {
-				
-				playSong(at, voiceChannel,song.getTitle());
+
+				playSong(at, voiceChannel, song.getTitle());
 			}
 
 			@Override
@@ -85,7 +85,7 @@ public class SongManager implements IFsongFinish {
 
 		this.joinVoiceChannel(channel, this.player.getSendHandler());
 
-		player.scheduler.queue(at,title);
+		player.scheduler.queue(at, title);
 	}
 
 	private void joinVoiceChannel(VoiceChannel manager, AudioSendHandler soundHandler) {
@@ -157,10 +157,10 @@ public class SongManager implements IFsongFinish {
 	public void onSongAddedToQueue(String songName) {
 		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_ADD_TO_QUEUE + songName).queue();
 	};
-	
+
 	@Override
-	public void onSongsEnded(){
-		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_NO_MORE_SONGS);
+	public void onSongsEnded() {
+		this.textChannel.sendMessage(BotFinalMessages.MSG_RESPONSE_NO_MORE_SONGS).queue();
 	}
 
 }

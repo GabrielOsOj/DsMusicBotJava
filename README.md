@@ -2,13 +2,18 @@
 # Discord Music Bot
 Este es un bot de música para Discord desarrollado como proyecto personal para reforzar mis conocimientos en Java.
 
+Permite la reproduccion de musica en canales de voz, utiliza la librerias JDA para la conexion con discord, Lavaplayer para la TRANSMISION de musica y la libreria yt-dlp creada en python para la descarga de archivos.
+
 Funcionalidades principales:
-- Reproducción de música desde YouTube.
-- Gestión de cola de canciones (play, pause, next).
-- Limpieza automática de archivos temporales.
+- Soporte de múltiples comandos.
+- Descarga temporal de archivos musicales.
+- Reproduccion automatica en canales de voz.
+- Gestion de cola de reproduccion.
+- Uso de listeners personalizados.
 
 ---
 ## Instalacion
+### Global
 1. Descarga el repositorio:
 `git clone https://github.com/GabrielOsOj/DsMusicBotJava.git`
 
@@ -18,7 +23,44 @@ Funcionalidades principales:
 3. Ejecuta en el terminal 
 `java -jar targer/discord-bot.jar`
 
-> Cada vez que se despliegue el bot, deberas ingresar tu discord bot token
+> Cada vez que se despliegue el bot, deberas ingresar tu discord bot token.
+
+IMPORTANTE:
+Se requiere de 4 dependencias para el correcto funcionamiento:
+- Python3 para la ejecucion interna de las canciones.
+- yt-dlp para la descarga de archivos.
+- ffmpeg y ffprobe para la correcta ejecucion de ffmpeg
+
+---
+### Docker
+Es necesario tener instalado docker dentro del equipo donde se ejecutara el bot.
+Tambien es necesario tener creado previamente un token de acceso para el bot, este se crea dentro del portal de desarrollador de discord, es neceseario que el token cuente con los permisos de:
+
+- Presence Intent
+- Server Members Intent
+- Message Content Intent
+
+### Ejecucion con docker
+En el directorio que desees, crea un nuevo archivo de configuracion llamado:
+docker-compose.yml
+Abrelo y pega el siguiente codigo:
+
+```yaml
+version: '3.8'
+
+services:
+  discord_bot:
+    image: gbdev001/discord_bot:latest
+    container_name: discord_bot
+    restart: unless-stopped
+    command : //tu token creado
+
+```
+finalmente ejecuta:
+```bash
+docker compose up
+```
+para detener el bot, preciona ctrl + c 
 
 ---
 ## Explicación a detalle
@@ -75,6 +117,10 @@ Una vez obtenido el HTML del resultado de búsqueda, se busca el ID del video de
 
 > Evitar anuncios:
 Para evitar capturar el ID de un video de anuncio, se busca la etiqueta llamada videoRenderer. Dentro de esta, se encuentran los datos de los videos obtenidos de la búsqueda, y se usa una expresión regular para seleccionar el primer ID válido.
+
+### Descarga de canciones temporales
+Para reproducir la cancion, se toma el id proveniente de la clase SearchManager.
+Internamente, la descarga se realiza mediante la libreria yt-dlp, la misma esta desarrollada en python y es ejecutada como un proceso externo en java, con esta libreria se obtiene la url del recurso de audio deseado y se descarga de forma TEMPORAL para su reproduccion en discord.
 
 Finalmente, cuando la canción termina, se dispara un evento para que la clase SAD elimine la canción usando el path local almacenado en el objeto SongDownloadedFile.
 
