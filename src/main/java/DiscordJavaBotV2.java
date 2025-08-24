@@ -21,7 +21,11 @@ public class DiscordJavaBotV2 {
 		
 		BotManager bot = new BotManager();
 		bot.run(key);
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> develop
 		/* TEST */
 
 //		 Constantes cts = new Constantes();
