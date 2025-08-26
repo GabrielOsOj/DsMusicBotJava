@@ -38,10 +38,16 @@ public class DwnDownload {
 	protected SongDownloadedFile download(String songId) {
 		// this return songDownloadFile, contains the path and the name of song
 		String[] audioSourceUrl = this.urlAudioSource(songId);
-
+		
+		System.out.println("->"+audioSourceUrl[0]+"\n");
+		System.out.println("-->"+audioSourceUrl[1]+"\n");
+		System.out.println("--->"+audioSourceUrl[2]+"\n");
+		
 		try {
 			// this.downloadWithoutSize(URI.create(audioSourceUrl[1]), audioSourceUrl[0]);
 			this.downloadWithFfmpeg(audioSourceUrl[2], audioSourceUrl[1]);
+//			this.downloadWithFfmpeg(temp, audioSourceUrl[1]);
+//			this.downloadWithFfmpeg(temp, "testSong - 1");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -52,7 +58,8 @@ public class DwnDownload {
 
 	private String[] urlAudioSource(String url) {
 
-		ProcessBuilder builder = new ProcessBuilder("yt-dlp","-f", "bestaudio", "--get-url", url, "--get-title");
+//		ProcessBuilder builder = new ProcessBuilder("yt-dlp","-f", "bestaudio", "--get-url", url, "--get-title");
+		ProcessBuilder builder = new ProcessBuilder("yt-dlp", "-f", "bestaudio", "--get-url", url, "--get-title");
 		builder.redirectErrorStream(true);
 
 		try {
@@ -78,14 +85,17 @@ public class DwnDownload {
 
 	private void downloadWithFfmpeg(String uri, String songName) {
 
-//		String outputPath = this.cachePath.getAbsolutePath() + "\\" + songName + ".m4a";
+//		String outputPath = Paths.get(this.cachePath.getAbsolutePath(),songName+".m4a").toString();
+String outputPath = Paths.get(this.cachePath.getPath(), songName+".m4a").toString();
 		
-		String outputPath = Paths.get(this.cachePath.getAbsolutePath(),songName+".m4a").toString();
-		
+//		String outputPath = this.cachePath + File.separator + songName + ".m4a";
+
 		System.out.println(uri);
 		System.out.println(songName);
 		
-		ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-i", uri, "-c", "copy", outputPath, "-y");
+//		ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-i", uri, "-c", "copy", outputPath, "-y");
+		ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-i", uri, "-c:a", "aac", outputPath, "-y");
+
 		builder.redirectOutput(new File("logs.log"));
 		builder.redirectError(new File("error_logs.log"));
 
