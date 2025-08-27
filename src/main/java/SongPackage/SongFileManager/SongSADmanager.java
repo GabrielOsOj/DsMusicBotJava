@@ -2,6 +2,7 @@ package SongPackage.SongFileManager;
 
 import SongPackage.SongFileManager.DownloadPackage.DwnManager;
 import SongPackage.SongFileManager.SearchPackage.SchManager;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,7 +21,7 @@ public class SongSADmanager {
     public SongSADmanager() {
 
         this.searchMG = new SchManager();
-        this.downloadMG = new DwnManager(System.getProperty("user.dir") + "\\cache\\");
+        this.downloadMG = new DwnManager(System.getProperty("user.dir") + File.separator+ "cache"+File.separator);
     }
 
     public SongDownloadedFile SAD(String songName) throws InterruptedException, ExecutionException {

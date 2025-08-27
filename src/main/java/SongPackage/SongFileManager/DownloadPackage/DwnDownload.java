@@ -40,7 +40,12 @@ public class DwnDownload {
 		String[] audioSourceUrl = this.urlAudioSource(songId);
 
 		try {
-			this.downloadWithoutSize(URI.create(audioSourceUrl[1]), audioSourceUrl[0]);
+
+			// this.downloadWithoutSize(URI.create(audioSourceUrl[1]), audioSourceUrl[0]);
+			this.downloadWithFfmpeg(audioSourceUrl[2], audioSourceUrl[1]);
+			// this.downloadWithFfmpeg(temp, audioSourceUrl[1]);
+			// this.downloadWithFfmpeg(temp, "testSong - 1");
+
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -76,6 +81,36 @@ public class DwnDownload {
 		return null;
 	}
 
+	private void downloadWithFfmpeg(String uri, String songName) {
+
+		// String outputPath =
+		// Paths.get(this.cachePath.getAbsolutePath(),songName+".m4a").toString();
+		String outputPath = Paths.get(this.cachePath.getPath(), songName + ".m4a").toString();
+
+		// String outputPath = this.cachePath + File.separator + songName + ".m4a";
+
+		System.out.println(uri);
+		System.out.println(songName);
+
+		// ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-i", uri, "-c", "copy",
+		// outputPath, "-y");
+		ProcessBuilder builder = new ProcessBuilder("ffmpeg", "-i", uri, "-c:a", "aac", outputPath, "-y");
+
+		builder.redirectOutput(new File("logs.log"));
+		builder.redirectError(new File("error_logs.log"));
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			this.tempFile = new SongDownloadedFile().setSongPath(outputPath).setTitle(songName);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	@Deprecated
 	private void downloadWithoutSize(URI uri, String songName) throws IOException, InterruptedException {
 		int start = 0;
 		boolean hasEnd = false;
